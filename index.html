@@ -40,5 +40,47 @@ function chars(){$('chars').innerHTML=CH.map(c=>{let visible=S.era?(!['دیاک�
 function events(){$('events').innerHTML=EV.filter(e=>e[0]<=S.year+1).map(e=>'<div class="event">'+Math.abs(e[0])+(e[0]<0?' پ.م.':' م.')+' — '+e[1]+'</div>').join('')}
 function tab(x){[['map','tmap'],['war','twar'],['eco','teco'],['dip','tdip'],['court','tcourt']].forEach(a=>{$(a[0]).style.display=a[0]===x?'block':'none';$(a[1]).classList.toggle('active',a[0]===x)})}
 function save(){localStorage.setItem('shahanshahi-state',JSON.stringify(S));log('ذخیره شد.');render()}function resetGame(){if(confirm('بازی از ابتدا شروع شود؟')){localStorage.removeItem('shahanshahi-state');location.reload()}}
+
 try{let x=JSON.parse(localStorage.getItem('shahanshahi-state'));if(x)S=Object.assign(S,x)}catch(e){}normalizeState();render();
+
+// AI / pacing patch: deterministic strategic behavior, controlled wars, and faster historical progress.
+function shAtWarWith(n){let me=S.era?'هخامنشی':'ماد';return S.wars.some(w=>(w.a===n&&w.d===me)||(w.d===n&&w.a===me))}
+function shWarCount(n){return S.wars.filter(w=>w.a===n||w.d===n).length}
+function shPowerCanReach(q){return(q.border||[]).some(i=>P[i]&&['owned','subject','vassal'].includes(P[i].type))}
+function ai(){
+ let me=S.era?'هخامنشی':'ماد',my=totalArmy(),ex=S.warWear||0;
+ Object.entries(S.powers).forEach(([n,q])=>{
+  if(!q||q.a<=0)return;
+  let rel=Number(S.relations[n]??q.r??0),border=shPowerCanReach(q),atWar=shAtWarWith(n);
+  let cap=Math.max(18000,Math.round(S.pop*34+S.tech*1400));
+  if(!atWar)q.a=Math.min(Math.round(cap*1.15),q.a+Math.max(0,Math.round(q.a*(q.a<cap?.0045:.0008))));
+  let canAttack=border&&rel<=-55&&q.a>=my*1.30&&S.stab<78&&ex<12&&shWarCount(n)===0;
+  if(canAttack){S.wars.push({a:n,d:me,goal:'تصرف مرزی',score:0,front:n,turns:0});S.warWear+=2;log(n+' با انگیزه مرزی، برتری نظامی و آمادگی کافی وارد جنگ شد.');}
+  if(!atWar&&rel>=45)q.a=Math.min(Math.round(cap*1.2),q.a+Math.round(q.a*.001));
+  q.r=rel;
+ });
+ S.wars.forEach(w=>{
+  w.turns=(w.turns||0)+1;
+  let isPlayer=w.a===me,foe=isPlayer?S.powers[w.d]:S.powers[w.a];if(!foe)return;
+  let us=isPlayer?totalArmy():foe.a,opp=isPlayer?foe.a:totalArmy(),ratio=us/Math.max(1,opp);
+  if(isPlayer){
+   w.score=clamp(w.score+(ratio>1.45?3:ratio>1.15?2:ratio>.9?0:-2),-100,100);
+   foe.a=Math.max(0,foe.a-Math.round(totalArmy()*(ratio>1.15?.0035:.0015)));
+   if(w.score>=70&&foe.a<Math.max(7000,my*.12)){foe.a=0;w.score=100;log(me+' در جنگ با '+w.d+' پیروز شد.');}
+   else if(w.turns>=12&&Math.abs(w.score)<18){w.score=100;log('جنگ طولانی با '+w.d+' با صلح فرسایشی پایان یافت.');}
+  }else{
+   w.score=clamp(w.score+(ratio<.65?2:ratio<.9?1:ratio<1.1?0:-2),-100,100);
+   if(w.turns>=14&&w.score<55){w.score=100;log('جنگ با '+w.d+' پس از فرسایش دو طرف با آتش‌بس پایان یافت.');}
+   if(w.score>58){S.stab=Math.max(0,S.stab-2);S.armies.forEach(a=>{a.n=Math.max(1000,Math.round(a.n*.995));a.m=Math.max(25,a.m-1)})}
+  }
+ });
+ S.wars=S.wars.filter(w=>w.score<100);
+ Object.keys(S.powers).forEach(n=>{if(S.powers[n].a<=0){delete S.powers[n];delete S.relations[n]}});
+}
+function historicalEvents(){if(S.era!==1)return;if(S.year>=-539&&!S._hist539){S._hist539=1;S.relations.بابل=clamp((S.relations.بابل||0)-20,-100,100);log('رویداد تاریخی: فتح بابل توسط کوروش؛ از اینجا جنگ/فتح بابل وارد مرحله تاریخی می‌شود.')}if(S.year>=-525&&!S._hist525){S._hist525=1;log('رویداد تاریخی: لشکرکشی کمبوجیه به مصر؛ فتح مصر اکنون ممکن است.')}}
+function yearCore(){S.year++;let prod=own().reduce((x,p)=>x+p.pop*(.7+p.farm/100)*(1+p.dev*.08),0);S.food+=Math.round(prod/3)-Math.round(totalArmy()/7000);S.water=Math.max(0,S.water-1);S.cash+=Math.max(5,Math.round(S.pop/80));S.armies.forEach(a=>{a.s=Math.max(0,a.s-4);if(a.s<25)a.m=Math.max(0,a.m-2)});S.sieges.forEach(s=>{let a=S.armies.find(x=>x.id===s.a),d=P[s.p];if(a&&d&&d.type!=='owned'){s.q+=12+S.tech;d.garrison=Math.max(0,d.garrison-Math.round(a.n*(.025+S.tech*.002)));if(s.q>=100||d.garrison<900){d.type='owned';d.owner=S.era?'هخامنشی':'ماد';a.p=s.p;S.prestige+=2;log('محاصره '+d.n+' پایان یافت و استان فتح شد.')}}});S.sieges=S.sieges.filter(s=>P[s.p]&&P[s.p].type!=='owned');if(S.food<250)S.stab=Math.max(0,S.stab-5);if(S.water<35)S.stab=Math.max(0,S.stab-4);if(S.stab<45)S.rebellion=true;if(S.water<60&&S.food<300&&Math.abs(S.year)%7===0)S.disaster=true;S.pop=Math.max(10,S.pop+(S.food>350&&S.water>45?Math.round(S.pop*.018):Math.round(S.pop*-.02)));S.warWear=Math.max(0,S.warWear-1);ai();if(S.rebellion&&S.stab+S.legit>125){S.rebellion=false;S.stab-=6;log('شورش با سازش سیاسی پایان یافت.')}if(S.disaster&&S.cash>=120&&S.food>=100){S.cash-=120;S.food-=100;S.disaster=false;log('بلای طبیعی مهار شد.')}let idx=0;for(let i=ERAS.length-1;i>0;i--){if(S.year>=ERAS[i][1]){idx=i;break}}if(idx>S.era)transition(idx);historicalEvents();if(Object.keys(S.powers).length===0&&!S.rebellion&&!S.disaster)S.msg='پیروزی نهایی: تمام قدرت‌های رقیب شکست خوردند.'}
+function advanceYears(n){n=Math.max(1,Math.min(10,Math.floor(n)||1));for(let i=0;i<n;i++)yearCore();render()}
+function year(){advanceYears(1)}
+function addAdvanceButtons(){let grid=document.querySelector('#eco .grid');if(!grid||document.getElementById('adv5'))return;let b=document.createElement('button');b.id='adv5';b.textContent='پیشروی ۵ ساله';b.onclick=()=>advanceYears(5);let y=grid.querySelector('button[onclick="year()"]');if(y)grid.insertBefore(b,y)}
+const _render0=render;render=function(){_render0();addAdvanceButtons()};addAdvanceButtons();
 </script></body></html>
