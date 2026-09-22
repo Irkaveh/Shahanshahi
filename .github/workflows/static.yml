@@ -1,0 +1,25 @@
+name: Static project checks
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate HTML exists
+        run: test -f index.html
+
+      - name: Show project files
+        run: |
+          echo "Shahanshahi static project"
+          find . -maxdepth 2 -type f | sort
