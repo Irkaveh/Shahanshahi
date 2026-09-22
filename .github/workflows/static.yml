@@ -16,10 +16,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate HTML exists
+      - name: Validate game file
         run: test -f index.html
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          sed -n '/<script>/,/<\/script>/p' index.html | sed '1d;$d' > /tmp/shahanshahi.js
+          node --check /tmp/shahanshahi.js
+
+      - name: Validate repository metadata
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f CONTRIBUTING.md
+          test -f SECURITY.md
+          test -f CHANGELOG.md
 
       - name: Show project files
         run: |
           echo "Shahanshahi static project"
-          find . -maxdepth 2 -type f | sort
+          find . -maxdepth 3 -type f | sort
