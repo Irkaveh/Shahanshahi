@@ -2,58 +2,69 @@
 
 یک بازی استراتژی تاریخی تحت وب درباره شکل‌گیری و تحول حکومت‌های ایرانی، با تمرکز اولیه بر ماد و مسیر تاریخی آن تا انتقال قدرت.
 
-## وضعیت پروژه
+> **Project status:** active prototype / pre-release. The current game is playable, but architecture, historical documentation, balancing, and automated testing are still being developed.
 
-پروژه در حال توسعه است و نسخه فعلی یک prototype قابل اجرا در مرورگر است. بازی بدون backend و با HTML/CSS/JavaScript خالص اجرا می‌شود و وضعیت بازی را در مرورگر ذخیره می‌کند.
+## Why this project?
 
-### قابلیت‌های فعلی
+Shahanshahi is an open-source experiment in combining a historical timeline with a lightweight grand-strategy simulation that runs entirely in the browser.
 
-- نقشه تعاملی و انتخاب استان‌ها
-- مدیریت ارتش، حرکت، حمله، محاصره، تقسیم و ادغام نیروها
-- اقتصاد، مالیات، تجارت، آب، آبیاری و توسعه
-- دیپلماسی و روابط با قدرت‌های منطقه‌ای
-- مسیر تاریخی ماد و رویدادهای زمان‌مند
-- شخصیت‌ها، دربار و مدیریت نفوذ
-- شبکه جاسوسی
-- حلقه مخفی شاه و عملیات پنهانی
-- ذخیره و بازیابی وضعیت با localStorage
-- رابط واکنش‌گرا برای نمایشگرهای کوچک
+The project intentionally favors a small, dependency-free web stack so that the prototype is easy to inspect, fork, modify, and run.
 
-## اجرا
+## Current features
 
-هیچ build step یا وابستگی خارجی لازم نیست.
+- Interactive SVG map and province selection
+- Army movement, attack, siege, split, merge, and recruitment
+- Economy: taxation, trade, water, irrigation, administration, and science
+- Diplomacy and regional-power relations
+- Time-based Median historical events
+- Court characters and influence
+- Espionage network
+- Secret royal ring and covert operations
+- Browser save/load using localStorage
+- Responsive layout for small screens
+- No backend and no external runtime dependency
 
-فایل index.html را در یک مرورگر مدرن باز کنید.
+## Run locally
 
-برای انتشار روی GitHub Pages نیز کافی است repository را روی Pages تنظیم کنید و شاخه main را به عنوان منبع انتخاب کنید.
+No build step is required.
 
-## ساختار
+Open `index.html` in a modern browser.
 
-- index.html — بازی و منطق اصلی فعلی
-- data/ — داده‌های پروژه
-- database/ — داده‌ها/ساختارهای پایگاه داده پروژه
+The game is also designed to be deployable as a static GitHub Pages site.
+
+## Repository structure
+
+- `index.html` — current playable prototype and main game logic
+- `docs/HISTORICAL_MODEL.md` — scope and limitations of the historical simulation
+- `docs/PLAYTEST.md` — manual smoke-test procedure
+- `CHANGELOG.md` — project history and planned 0.1.0 release criteria
+- `CONTRIBUTING.md` — contribution workflow
+- `SECURITY.md` — security reporting policy
+- `.github/workflows/` — automated validation and Pages deployment
 
 ## Roadmap
 
-- جدا کردن منطق بازی از رابط کاربری
-- تبدیل داده‌های تاریخی به فایل‌های داده مستقل
-- افزودن تست‌های خودکار برای منطق اقتصادی و نظامی
-- بهبود توازن بازی
-- مستندسازی مدل تاریخی و منابع
-- افزودن سناریوهای بیشتر
-- بهبود دسترس‌پذیری و رابط کاربری
-- انتشار نسخه‌های مشخص و changelog
+1. Separate historical data from simulation logic.
+2. Split the large prototype file into maintainable modules.
+3. Add automated tests for pure game systems such as economy, movement, combat, and save/load.
+4. Improve balancing and document gameplay assumptions.
+5. Add source-backed historical notes and scenario documentation.
+6. Add more historical scenarios.
+7. Improve accessibility and interface polish.
+8. Publish a first tagged public release (0.1.0).
 
-## مشارکت
+The repository contains GitHub Issues for the major roadmap items.
 
-پیشنهادها، گزارش خطا و pull requestها برای بهبود پروژه استقبال می‌شوند. قبل از تغییرات بزرگ، بهتر است یک Issue باز شود تا درباره جهت تغییر توافق شود.
+## Historical scope
 
-جزئیات در CONTRIBUTING.md آمده است.
+The current scenario uses historical names and approximate dates but is a game abstraction, not a scholarly reconstruction. See `docs/HISTORICAL_MODEL.md` before treating a mechanic or event as a historical claim.
 
-## امنیت
+## Contributing
 
-برای گزارش آسیب‌پذیری امنیتی، به SECURITY.md مراجعه کنید.
+Bug reports, historical corrections, balance feedback, documentation improvements, and code contributions are welcome.
 
-## مجوز
+See `CONTRIBUTING.md` and the open Issues before making a large change.
 
-کد این پروژه تحت MIT License منتشر شده است. فایل‌ها یا داده‌های شخص ثالث، در صورت وجود، ممکن است شرایط مجوز جداگانه داشته باشند.
+## License
+
+The project code is released under the MIT License. Third-party assets or data, if added later, may have separate licensing terms.
